@@ -11,7 +11,7 @@ namespace app\user\admin;
 
 use app\admin\controller\Admin;
 use app\common\builder\ZBuilder;
-use app\user\model\Message as MessageModel;
+use app\user\model\Order as OrderModel;
 use app\user\model\User as UserModel;
 use app\user\model\Role as RoleModel;
 
@@ -28,12 +28,27 @@ class Order extends Admin
      * @throws \think\Exception
      * @throws \think\exception\DbException
      */
-    public function index()
+    public function index($group = 'tab1')
     {
-        $data_list = MessageModel::where($this->getMap())
+        $map = [];
+        // 模块排序
+        if ($group == 'tab2') {
+            $map['status'] = 1;
+
+        }
+        $data_list = OrderModel::where($map)
             ->order($this->getOrder('id DESC'))
             ->paginate();
-
+        $list_tab = [
+            'tab1' => ['title' => '全部有效订单', 'url' => url('index', ['group' => 'tab1'])],
+            'tab2' => ['title' => '待支付', 'url' => url('index', ['group' => 'tab2'])],
+            'tab3' => ['title' => '待发货', 'url' => url('index', ['group' => 'tab2'])],
+            'tab4' => ['title' => '待收货', 'url' => url('index', ['group' => 'tab2'])],
+            'tab5' => ['title' => '已完成', 'url' => url('index', ['group' => 'tab2'])],
+            'tab6' => ['title' => '待商家退款', 'url' => url('index', ['group' => 'tab2'])],
+            'tab7' => ['title' => '待退款', 'url' => url('index', ['group' => 'tab2'])],
+            'tab8' => ['title' => '退款完成', 'url' => url('index', ['group' => 'tab2'])],
+        ];
         return ZBuilder::make('table')
             ->setTableName('admin_message')
             ->addTopButton('add')
@@ -42,20 +57,18 @@ class Order extends Admin
             ->addRightButton('delete')
             ->addColumns([
                 ['id', 'ID'],
-                ['uid_receive', '接收者', 'callback', 'get_nickname'],
-                ['uid_send', '发送者', 'callback', 'get_nickname'],
-                ['type', '分类'],
-                ['content', '内容'],
-                ['status', '状态', 'status', '', ['未读', '已读']],
-                ['create_time', '发送时间', 'datetime'],
-                ['read_time', '阅读时间', 'datetime'],
+                ['order_num', '订单号', 'text.edit'],
+                ['status', '状态', 'switch'],
+                ['create_time', '下单时间', 'datetime.edit'],
                 ['right_button', '操作', 'btn'],
             ])
-            ->addFilter('type')
-            ->addFilter('status', ['未读', '已读'])
+
             ->setRowList($data_list)
+            ->setTabNav($list_tab,  'tab1')
             ->fetch();
     }
+
+
 
     /**
      * 新增
